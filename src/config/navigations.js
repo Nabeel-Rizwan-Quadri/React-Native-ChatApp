@@ -52,8 +52,25 @@ export default function MainNavigator() {
 }
 
 function MainStack() {
-  return <Drawer.Navigator initialRouteName="Pickup" >
-    <Drawer.Screen name="DashboardStack" component={DashboardStack} />
+  const auth = getAuth()
+  const Dispatch = useDispatch()
+  const usersData = useSelector(state => state.userReducer.user)
+  const [user, setUser] = useState({displayName: " "})
+
+  useEffect(() => {
+    onAuthStateChanged(auth, userData => {
+      Dispatch(updateUser(userData))
+      setUser(usersData)
+    })
+  }, [usersData])
+
+  let displayName = " "
+
+  {user.displayName ? displayName = user.displayName : console.log(displayName)}
+
+
+  return <Drawer.Navigator >
+    <Drawer.Screen name="DashboardStack" component={DashboardStack} options={{title: user.displayName}}/>
     <Drawer.Screen name="Profile" component={Profile} />
     <Drawer.Screen name="Logout" component={Logout} />
   </Drawer.Navigator>
@@ -68,21 +85,22 @@ function AuthStack() {
 
 function DashboardStack() {
   return <Tab.Navigator screenOptions={{ headerShown: false }}>
-  <Tab.Screen name="AllUsers" component={Dashboard2Stack} />
-  <Tab.Screen name="ChatStack" component={ChatStack} />
+  <Tab.Screen name="All Users" component={Dashboard2Stack} />
+  <Tab.Screen name="Active Chats" component={ChatStack} />
 </Tab.Navigator>
 }
 
 function Dashboard2Stack() {
-  return <Stack.Navigator >
-  <Stack.Screen name="Dashboard2" component={Dashboard} />
-  <Stack.Screen name="Chat" component={Chat} />
+
+  return <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Screen name="Dashboard2" component={Dashboard}/>
+  {/* <Stack.Screen name="Chat" component={Chat} /> */}
 </Stack.Navigator>
 }
 
 function ChatStack() {
-  return <Stack.Navigator >
-  <Stack.Screen name="AllChats" component={AllChats} />
-  <Stack.Screen name="Chat" component={Chat} />
+  return <Stack.Navigator>
+  <Stack.Screen name="Active Chats" component={AllChats} />
+  <Stack.Screen name="Chat" component={Chat} options={({ route }) => ({ title: route.params.name })} />
 </Stack.Navigator>
 }

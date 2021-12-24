@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, FlatList, Text,
+  View, TextInput, Text,
   StyleSheet, Dimensions,
   ScrollView, TouchableOpacity
 } from 'react-native';
 import { useDispatch, useSelector } from "react-redux";
-import { DataTable } from 'react-native-paper';
-import { TextInput, Button } from 'react-native-paper'
-import { getFirestore, setDoc, doc, addDoc, collection, query, getDocs, where, orderBy } from "firebase/firestore";
+import { Button } from 'react-native-paper'
+import { getFirestore, onSnapshot, setDoc, doc, addDoc, collection, query, getDocs, where, orderBy } from "firebase/firestore";
 
 import { getRoomInfo, storeMessage } from '../../config/firebase';
 import { updateChats } from '../../store/actions/allChatsActions';
-import Footer from '../../components/Footer';
+// import Footer from '../../components/Footer';
 
 function Chat({ route }) {
   const db = getFirestore();
@@ -21,8 +20,8 @@ function Chat({ route }) {
 
   const currentUser = useSelector(state => state.userReducer.user)
 
-  const allMessages = useSelector(state => state.allChatsReducer.allChats)
-  console.log("Chats allMessages ", allMessages)
+  // const allMessages = useSelector(state => state.allChatsReducer.allChats)
+  // console.log("Chats allMessages ", allMessages)
 
   let createdAt = Date.now()
   const [messageInfo, setMessageInfo] = useState({
@@ -36,20 +35,29 @@ function Chat({ route }) {
 
   // const [roomInfo, setRoomInfo] = useState()
 
-  // const [chatData, setChatData] = useState([])
+  const [chatData, setChatData] = useState([])
 
 
   useEffect(async () => {
-
-    // const result = await getRoomInfo(roomId)
-    // setRoomInfo(result)
-
     //Calling all chats from redux
+    try {
+      const q = query(collection(db, "ChatRooms", roomId, "messages"), orderBy('createdAt', 'asc'));
 
-    dispatch(updateChats(roomId))
+      onSnapshot(q, (querySnapshot) => {
+        const copyDataArray = [];
+        querySnapshot.forEach((doc) => {
+          copyDataArray.push(doc.data());
+        });
+        console.log("copyDataArray: ", copyDataArray);
+        setChatData(copyDataArray)
+        dispatch(updateChats(copyDataArray))
+      });
+    }
+    catch (error) {
+      console.log("Chat realtime error", error)
+    }
 
-
-  }, [refresh])
+  }, [])
 
   const onChangeValues = (key, text) => {
     // console.log(text)
@@ -65,59 +73,87 @@ function Chat({ route }) {
   }
 
   return (
-    <View >
-      <DataTable style={styles.DataTable}>
+    <View style={{ flex: 1, flexDirection: 'column'}}>
+
+      <ScrollView style={styles.scrollView}>
         {
-          allMessages.map((item) => {
+          chatData.map((item) => {
             if (currentUser.uid == item.uid) {
-              return <DataTable.Row>
-                <DataTable.Cell style={styles.left}> {item.message}</DataTable.Cell>
-              </DataTable.Row>
+              return <Text style={styles.send}> {item.message} {"\n"}
+                <Text style={styles.time}>
+                  {Date(item.createdOn).slice(0, 21)}
+                </Text>
+              </Text>
+
             }
             else {
-              return <DataTable.Row>
-                <DataTable.Cell style={styles.right}> {item.message}</DataTable.Cell>
-              </DataTable.Row>
+              return <Text style={styles.recive}> {item.message} {"\n"}
+                <Text style={styles.time}>
+                  {Date(item.createdOn).slice(0, 21)}
+                </Text>
+              </Text>
             }
           })
         }
-      </DataTable>
+        
+      </ScrollView>
+
       <View style={styles.footer}>
-        <View className='bar'>
-          <TextInput style={{ width: '100%' }} label="message" type='string' onChangeText={(text) => onChangeValues("message", text)} ></TextInput>
-          <Button style={{ width: '100%' }} mode="contained" onPress={submit} >Sub</Button>
-        </View>
-        {/* <Footer /> */}
+        <TextInput style={styles.input} placeholder="  Message" type='string' onChangeText={(text) => onChangeValues("message", text)}/>
+        <Button style={styles.button} mode="contained" onPress={submit} >></Button>
       </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   scrollView: {
-    width: '100%',
-    height: '80%',
-    marginHorizontal: 20,
-  },
-  DataTable: {
-    height: '80%'
-  },
-  left: {
-    width: '100%',
-    backgroundColor: 'green',
-    fontSize: 30,
-    textAlign: 'right'
-  },
-  right: {
-    width: '100%',
-    backgroundColor: 'aqua',
-    fontSize: 30,
-    textAlign: 'left'
+    backgroundColor: 'white',
+    flex: 1
   },
   footer: {
-    width: '100%',
-    position: 'absolute'
-  }
+    flex: 0.09,
+    flexDirection: "row",
+    backgroundColor: "ghostwhite"
+  },
+  input: {
+    height: "100%",
+    flex: 250,
+  },
+  button: {
+    flex: 1,
+  },
+  send: {
+    width: '49%',
+    backgroundColor: 'lightgreen',
+    fontSize: 20,
+    textAlign: 'right',
+    padding: 10,
+    margin: 3,
+    marginLeft: "50%",
+    borderRadius: 25,
+    borderBottomRightRadius: 0,
+  },
+  recive: {
+    width: '50%',
+    backgroundColor: 'skyblue',
+    fontSize: 20,
+    textAlign: 'left',
+    padding: 10,
+    margin: 3,
+    borderRadius: 25,
+    borderBottomLeftRadius: 0,
+  },
+  time: {
+    color: "grey",
+    fontSize: 10,
+    textAlign: 'left',
+  },
+  text: {
+    fontSize: 42,
+    flex: 1
+  },
 });
 
 

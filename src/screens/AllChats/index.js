@@ -4,48 +4,74 @@ import {
   StyleSheet, Dimensions,
   ScrollView, TouchableOpacity
 } from 'react-native';
-import { Divider, Button, DataTable } from 'react-native-paper'
-import { useDispatch, useSelector } from "react-redux";
+import { DataTable } from 'react-native-paper'
+import { useSelector } from "react-redux";
+import { getFirestore } from "firebase/firestore";
 
 import { getAllActiveChats } from '../../config/firebase';
-import { updateSelectedChat } from '../../store/actions/userActions';
+// import { updateSelectedChat } from '../../store/actions/userActions';
 
 function AllChats({ navigation }) {
-  const Dispatch = useDispatch()
-  const { allChats } = useSelector(state => state.allChatsReducer)
+  const db = getFirestore();
+
+  // const Dispatch = useDispatch()
+
+  // const { allChats } = useSelector(state => state.allChatsReducer)
+
   const currentUsersData = useSelector(state => state.userReducer.user)
 
+  const allChats = useSelector(state => state.allChatsReducer)
+  // console.log("allChats state", allChats)
+
   const [activeChats, setAllActiveChats] = useState([])
+  // console.log("activeChats", activeChats)
 
   useEffect(async () => {
-    const result = await getAllActiveChats(currentUsersData.uid)
-    console.log("result", result)
-    setAllActiveChats(result)
-  }, [])
 
-  const openChat = (selectedChat) => {
-    // Dispatch(updateSelectedChat(selectedChat))
-    // navigation.navigate('Chat', { selectedChat })
+    // const q = query(collection(db, "ChatRooms"), where(`users.${currentUsersData.uid}`, "==", true));
+
+    // onSnapshot(q, (querySnapshot) => {
+    //   const copyDataArray = [];
+    //   querySnapshot.forEach((doc) => {
+    //     copyDataArray.push(doc.data());
+    //   });
+    //   console.log("copyDataArray: ", copyDataArray);
+    //   setAllActiveChats(copyDataArray)
+    // });
+
+    const result = await getAllActiveChats(currentUsersData.uid)
+    // console.log("result", result)
+    setAllActiveChats(result)
+
+  }, [allChats])
+
+  const openChat = (roomId, chatName) => {
+    navigation.navigate('Chat', { roomId, name: `${chatName}`})
   }
 
   return (
     <View>
-      <Text>ALL ACTIVE Chats</Text>
       <DataTable>
-        {/* {
-          allChats.map((item) => {
-
-          console.log(item.)
-
-            return <DataTable.Row><TouchableOpacity
+        {
+          activeChats.map((item) => {
+            // console.log(item.sendersDetails)
+            let chatName = item.sendersDetails[currentUsersData.uid].fullName
+            // let chatName = " a"
+            return <DataTable.Row style={styles.row}><TouchableOpacity
               style={styles.button}
-              onPress={() => openChat(item)}>
+              onPress={() => openChat(item.id, chatName)}>
 
-              <DataTable.Cell style={styles.left}> {item.users}</DataTable.Cell>
+              {/* <Text style={styles.profilePic}>u{"\n"}</Text> */}
+
+              <DataTable.Cell style={{fontsize: 30}}> {chatName} {"\t"}{"\t"}
+              <Text style={styles.time}>{item.lastMessage.createdOn || ""}</Text>
+              </DataTable.Cell>
+
+              <Text style={styles.time}>{item.lastMessage.message}</Text>
 
             </TouchableOpacity></DataTable.Row>
           })
-        } */}
+        }
       </DataTable>
     </View>
   );
@@ -55,10 +81,19 @@ const styles = StyleSheet.create({
   chat: {
     flex: 1,
     width: '100%',
-    height: '50%',
-    fontSize: 30,
-    justifyContent: 'center'
-  }
+  },
+  row: {
+  },
+  time: {
+    color: "grey"
+  },
+  // profilePic: {
+  //   backgroundColor: "black",
+  //   color: "white",
+  //   fontSize: 50,
+  //   borderRadius: "100%",
+  //   width: "10%",
+  // }
 });
 
 export default AllChats

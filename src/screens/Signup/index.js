@@ -26,17 +26,23 @@ function Signup({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', margin: 30 }}>
       <Text style={{fontSize: 25}}>Signup Now!</Text>
-
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => onChangeValues('userName', text)} placeholder='Username' ></TextInput>
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => onChangeValues('fullName', text)} placeholder='Full Name' ></TextInput>
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => onChangeValues('age', text)} type="number" placeholder='age' ></TextInput>
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => onChangeValues('phoneNumber', text)} type="number" placeholder='Phone No.' ></TextInput>
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => onChangeValues('email', text)} placeholder='Email' ></TextInput>
+      <Text></Text>
       <TextInput style={{width: '100%'}} onChangeText={(text) => setPassword(text)} secureTextEntry={true} placeholder='Password' ></TextInput>
-
+      <Text></Text>
       <Button style={{width: '100%'}} mode="contained" onPress={submit}>Signup</Button>
+      <Text></Text>
       <Button style={{width: '100%'}} mode="contained" onPress={() => navigation.navigate('Login')}>To Login</Button>
 
     </View>

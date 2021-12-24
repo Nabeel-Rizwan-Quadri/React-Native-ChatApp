@@ -4,45 +4,63 @@ import {
   StyleSheet, Dimensions,
   ScrollView, TouchableOpacity, Alert
 } from 'react-native';
-import { Divider, Button, Paragraph, Dialog, Portal, Provider, DataTable } from 'react-native-paper'
+import { Divider, Button, Paragraph, Dialog, Portal, Searchbar, DataTable } from 'react-native-paper'
 import { useDispatch, useSelector } from "react-redux";
 
 
-import { getAllUsers, newChatRoom, getRoomInfo } from '../../config/firebase';
+import { getAllUsers, newChatRoom, getRoomInfo, getCurrentUserData } from '../../config/firebase';
 
 function Dashboard({ navigation }) {
 
   const currentUsersData = useSelector(state => state.userReducer.user)
 
-  const [userData, setUserData] = useState([])
+  const [userData, setUserData] = useState()
+  const [curretnUserInfo, setCurretnUserInfo] = useState([])
+
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const onChangeSearch = query => setSearchQuery(query);
 
   useEffect(async () => {
-    const result = await getAllUsers(currentUsersData.uid)
-    setUserData(result)
+    // const result = await getAllUsers(currentUsersData.uid)
+    // setUserData(result)
+
+    const response = await getCurrentUserData(currentUsersData.uid)
+    setCurretnUserInfo(response)
   }, [])
 
-  const createNewChat = async (selectedUser) => {
-    const result = await newChatRoom(currentUsersData.uid, selectedUser.uid)
-    // console.log("dashboard room id", result.roomId)
+  const createNewChat = async (selectedUser, chatName) => {
+    const result = await newChatRoom(curretnUserInfo, selectedUser)
     let roomId = result.roomId
-    navigation.navigate('Chat', { roomId })
-
+    navigation.navigate('Chat', { roomId, name: `${chatName}`})
   }
-  
+
+  const submit = async () => {
+    // console.log(searchQuery)
+    const result = await getAllUsers(currentUsersData.uid, searchQuery)
+    setUserData(result)
+  }
+
   return (
     <View >
-      <Text>ALL REGISTERED USERS</Text>
+      <Searchbar
+        placeholder="Search a contact by number"
+        onChangeText={onChangeSearch}
+        onIconPress={submit}
+        value={searchQuery}
+      />
       <DataTable>
         {
-          userData.map((item) => {
+          userData ? userData.map((item) => {
             return <DataTable.Row><TouchableOpacity
               style={styles.button}
-              onPress={() => createNewChat(item)}>
+              onPress={() => createNewChat(item, item.fullName)}>
 
               <DataTable.Cell style={styles.left}> {item.fullName}</DataTable.Cell>
 
             </TouchableOpacity></DataTable.Row>
           })
+          : <Text style={{fontsize: 100, margin: 10}}>No chats found</Text>
         }
       </DataTable>
     </View>

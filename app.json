@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "React_first",
-    "slug": "React_first",
+    "name": "React_chat_app",
+    "slug": "react_chat_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,6 +27,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "description": ""
   }
 }
